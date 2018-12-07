@@ -1,0 +1,10 @@
+---
+- hosts: '{{ host }}'
+  remote_user: root
+
+  tasks:
+
+  - name: Removing Package name: '{{ package }}'
+    apt:
+      name: '{{ package }}'
+      state: absent

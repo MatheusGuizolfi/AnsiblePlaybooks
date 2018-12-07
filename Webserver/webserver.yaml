@@ -1,0 +1,102 @@
+---
+- hosts: "{{ host }}" 
+  tasks:
+
+  ##Instalando Apache + Módulos:
+  - name: Apache2 | Instalar Apache
+    action: apt pkg={{ item }} state=installed
+    with_items:
+      - apache2
+      - apache2-doc
+      - apache2
+      - libapache2-mod-fastcgi
+      - apache2-utils
+      - ssl-cert
+      - msmtp
+
+  ##Instalando PHP 7.0
+  - name: PHP7 | Instalar PHP7
+    action: apt pkg={{ item }} state=installed
+    with_items:
+      - libapache2-mod-php7.0
+      - php7.0
+      - php7.0-common
+      - php7.0-fpm
+      - php7.0-curl
+      - php7.0-dev
+      - php7.0-gd
+      - php-pear
+      - php-imagick
+      - php7.0-imap
+      - php7.0-json
+      - php7.0-mcrypt
+      - php-memcached
+      - php7.0-mysql
+      - php7.0-pspell
+      - php7.0-recode
+      - php7.0-snmp
+      - php7.0-sqlite3
+      - php7.0-tidy
+      - php7.0-xmlrpc
+      - php7.0-xsl
+      - mysql-client
+      - msmtp
+
+  ##Fastcgi
+  - name: Fastcgi
+    action: copy src=./arquivos/fastcgi.conf dest=/etc/apache2/mods-available/fastcgi.conf
+
+  ##Ativando Modulos
+  - name: Modulos | Ativando modulos
+    action: command a2enmod ssl rewrite suexec include actions fastcgi
+
+  ##Corrigir apache2
+  - name: apache2.conf
+    action: copy src=./arquivos/apache2.conf dest=/etc/apache2/apache2.conf
+
+  ##Restartando Apache
+  - name: Reiniciando | Apache
+    #action: service name=apache2 state=restarted
+    service:
+        name: apache2
+        state: reloaded
+
+ ######################################### INSTALANDO PROFTD ##################################################
+
+  - name: ProFTP | Instalando
+    apt:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      - proftpd-basic
+      - proftpd-mod-mysql
+
+  - name: ProFTP | Alterando Confs
+    template:
+      src: ./arquivos/proftpd.conf.j2
+      dest: /etc/proftpd/proftpd.conf
+
+  - name: ProFTP | Alterando Conf SQL
+    template: 
+      src: ./arquivos/sql.conf.j2
+      dest: /etc/proftpd/sql.conf
+
+  - name: ProFTP | Alterando Conf Modules
+    template:
+      src: ./arquivos/modules.conf.j2
+      dest: /etc/proftpd/modules.conf
+
+  - name: ProFTP | Cria Grupo
+    group:
+      name: ftpgroup
+      gid: 2001
+      state: present
+
+  - name: ProFTP | Cria User
+    user:
+      name: ftpuser
+      comment: proftpd user
+      uid: 2001
+      group: ftpgroup
+      shell: /bin/false
+      home: /bin/null

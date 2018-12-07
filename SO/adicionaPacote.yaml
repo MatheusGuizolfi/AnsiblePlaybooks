@@ -1,0 +1,11 @@
+---
+- hosts: '{{ host }}'
+  remote_user: root
+
+  tasks:
+
+  - name: Adding package - Name '{{ package }}'
+    apt:
+      update_cache: yes
+      name: '{{ package }}'
+      state: present

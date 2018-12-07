@@ -1,0 +1,8 @@
+alias ls='ls --color=auto -Fh'
+alias v='ls -l'
+alias d=ls
+alias df='df -h'
+alias cp='cp -i'
+alias mv='mv -i'
+alias rm='rm -i'
+alias ll='ls -ha'

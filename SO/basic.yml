@@ -1,0 +1,110 @@
+---
+- hosts: '{{ host }}'
+  remote_user: root
+  
+  tasks:
+
+    - name: Atualizar APT
+      apt:
+        update_cache: yes
+
+    - name: Upgrade APT
+      apt:
+        upgrade: dist 
+
+    - name: General | Instalando os pacotes necessários.
+      action: apt pkg={{ item }} state=installed
+      with_items:
+        - sysstat
+        - hdparm
+        - zsh
+        - vim
+        - htop
+        - tcpdump
+        - iptraf
+        - ntpdate
+        - ntp
+        - lm-sensors
+        - mlocate
+        - rsync
+        - acpid
+        - iproute
+        - sudo
+        - bzip2
+        - kernel-package
+        - libncurses5-dev
+        - screen
+        - dmidecode
+        - ethtool
+        - nmap
+        - openssh-server
+        - build-essential
+        - elinks 
+        - psmisc
+        - hwinfo
+        - bc
+        - ccze
+        - mtr-tiny
+        - telnet
+        - pciutils
+        - vlan
+        - dnsutils
+        - host
+        - makepasswd
+        - python-mysqldb
+        - python-passlib
+   
+
+    - name: Copy Sample of VIMRC profile
+      copy: 
+        src: ./arquivos/vimrc 
+        dest: /etc/vim/vimrc
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Copy Sample of BASHRC profile
+      copy:
+        src: ./arquivos/bashrc
+        dest: /root/.bashrc
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Copy Sample of Default SYSSTAT profile
+      copy:
+        src: ./arquivos/sysstat
+        dest: /etc/default/sysstat
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Copy Sample of SYSSTAT history profile
+      copy:
+        src: ./arquivos/sysstathistory
+        dest: /etc/sysstat/sysstat
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Copy Sample of SCREENRC profile
+      copy:
+        src: ./arquivos/screenrc
+        dest: /etc/screenrc
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Copy Sample of default profile
+      copy:
+        src: ./arquivos/profile
+        dest: /etc/profile
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Seting the hostname
+      shell: /bin/echo '{{ hostname }}' > /etc/hostname		  
+
+    - name: Reboot Server
+      shell: /sbin/reboot

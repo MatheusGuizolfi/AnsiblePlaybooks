@@ -1,0 +1,18 @@
+---
+- hosts: "{{ host }}"
+  tasks:
+  - name: ProFTP | Criando Database FTP
+    shell: mysql -e "CREATE DATABASE ftp;"
+
+  - name: ProFTP | Copiando arquivo de comandos
+    template:
+      src: ./arquivos/comandos.sql.j2
+      dest: /root/comandos.sql
+
+  - name: ProFTP | Executando arquivo de comandos
+    mysql_db:
+      state: import
+      name: ftp
+      target: /root/comandos.sql
+
+

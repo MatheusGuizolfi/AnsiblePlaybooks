@@ -1,0 +1,119 @@
+---
+- hosts: "{{ host }}" 
+  vars:
+    domain: "{{ hostname }}"
+  tasks:
+    ##Instalando o mysql
+    - name: Instalando MySQL(MariaDB)
+      apt: 
+        name: "{{ item }}" 
+        state: present
+      with_items:
+        - mariadb-server-10.0
+        - libmysqlclient-dev
+        - phpmyadmin
+        - php7.0-mysql
+        - php7.0-mysqlnd
+        - python-mysqldb
+
+#    - name: Instala o modulo de python para MySQL
+#      pip: name=MySQL-python
+
+    - name: Startando o servico do MariaDB
+      service:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Gerando uma senha para o root mariadb
+      command: openssl rand -base64 15 creates=/root/.my.cnf
+      register: mysql_root_pass
+
+    - name: Mostrando a senha no output
+      debug:
+        msg: "Senha root: {{ mysql_root_pass.stdout }}"
+      when: mysql_root_pass.changed
+    
+    - name: Cria arquivo de login
+      template:
+        src: ./arquivos/.my.cnf.j2
+        dest: /root/.my.cnf
+
+    - name: Removendo Acesso anonimo
+      mysql_user: name="" host={{ item }} state=absent
+      with_items:
+        - localhost
+        - "{{ hostname }}"
+    
+    - name: MariaDB | Change root pass
+      mysql_user: 
+        name: root 
+        host: "{{ item }}"
+        password: "{{ mysql_root_pass.stdout }}"
+      with_items:
+        - "{{ hostname }}"
+        - 127.0.0.1
+        - ::1
+        - localhost
+      when: mysql_root_pass.changed
+
+    ##Backup my.cnf
+    - name: Backup my.cnf
+      copy: 
+        src: /etc/mysql/my.cnf 
+        dest: /etc/mysql/my.cnf_original
+
+    ##Conf Mysql1
+    - name: Arquivo conf mysql
+      template: 
+        src: ./arquivos/my.cnf.j2 
+        dest: /etc/mysql/my.cnf
+
+    - name: Arquivo conf debian
+      template:
+        src: ./arquivos/debian.cnf.j2
+        dest: /etc/mysql/debian.cnf
+
+    ##Conf Mysql2
+    - name: Liberar acesso1
+      mysql_user:
+        name: root
+        priv: '*.*:ALL,GRANT'
+        state: present
+
+    - name: Desabilita acesso sem senha
+      shell: mysql -e "use mysql;update user set plugin='' where User='root';flush privileges;"
+
+    - name: Sttopa o servico do MySQL
+      service:
+        name: mysql
+        state: stopped
+
+    - name: Starta o servico do MySQL
+      service:
+        name: mysql
+        state: started
+      register: result
+      ignore_errors: True
+
+    - name: Starta o servico do MySQL
+      service:
+        name: mysql
+        state: started
+      when: result.failed
+      ignore_errors: True
+     
+    - name: Cria link simbolico PHPMYADMIN
+      file:
+        src: /etc/phpmyadmin/apache.conf
+        dest: /etc/apache2/conf-available/phpmyadmin.conf
+        state: link		 
+
+    - name: Ativando o conf PHPMYADMIN
+      shell: /usr/sbin/a2enconf phpmyadmin
+
+    - name: Reiniciando | Apache
+      service:
+        name: apache2
+        state: reloaded
+ 

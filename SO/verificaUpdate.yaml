@@ -1,0 +1,15 @@
+---
+- hosts: '{{ host }}'
+  remote_user: root
+
+  tasks:
+
+  - name: Check available updates
+    command: apt list --upgradable | awk '{print $1}'
+    register: packages.available
+
+  - name: Store data in a file
+    command: echo '{{ packages.available.stdout }}' > data.txt
+
+  - name: Send data to selected users
+    command: sendmail '{{ emailUser }}'  < data.txt
